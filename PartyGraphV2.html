@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#386452">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PartyGraph">
+    <link rel="manifest" href="/manifest.json">
+    <title>PartyGraph</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    dark: '#1A1423',
+                    neon: '#39FF14',
+                },
+                boxShadow: {
+                    neon: '0 0 10px #39FF14',
+                }
+            }
+        }
+    }
+</script>
+
+    <style>
+        body {
+            overscroll-behavior-y: contain;
+        }
+        @media (display-mode: standalone) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#1A1423] min-h-screen text-neon-green">
+    <div id="app"> <style>
+    .text-neon-green {
+        color: #39FF14; /* bright neon green */
+    }
+</style>
+</div>
+
+    <script>
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgKGUpID0+IHsKICBzZWxmLnNraXBXYWl0aW5nKCk7Cn0pOwoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdhY3RpdmF0ZScsIChlKSA9PiB7CiAgc2VsZi5jbGllbnRzLmNsYWltKCk7Cn0pOwoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIChlKSA9PiB7CiAgZS5yZXNwb25kV2l0aChmZXRjaChlLnJlcXVlc3QpKTsKfSk7');
+        }
+
+        // Local Storage Implementation
+        const storage = {
+            get: (key) => {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : null;
+            },
+            set: (key, value) => {
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            delete: (key) => {
+                localStorage.removeItem(key);
+            },
+            list: (prefix = '') => {
+                const keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith(prefix)) {
+                        keys.push(key);
+                    }
+                }
+                return keys;
+            }
+        };
+
+        // Checkbox categories (single source of truth)
+        const CHECKBOX_LETTERS = ['We', 'Ed', 'Al', 'MD', 'Xt', 'Ka', 'K', 'C', 'Sh', '3M', '2C', 'L'];
+
+        // App State
+        let state = {
+            view: 'add',
+            events: [],
+            formData: {
+                // Order here is the canonical order
+                date: new Date().toISOString().split('T')[0],
+                partyName: '',
+                place: '',
+                city: '',
+                type: '',
+                after: false,
+                ticketPrice: '',
+               checkboxes: {
+    We: false,
+    Ed: false,
+    Al: false,
+    MD: false,
+    Xt: false,
+    Ka: false,
+    K: false,
+    C: false,
+    Sh: false,
+    '3M': false,
+    '2C': false,
+    L: false
+
+                },
+                notes: ''
+            }
+        };
+
+        // Load events from storage
+        function loadEvents() {
+            const keys = storage.list('event:');
+            state.events = keys
+                .map(key => storage.get(key))
+                .filter(e => e !== null)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        // Save event
+        function saveEvent() {
+            if (!state.formData.date || !state.formData.partyName) {
+                alert('Please fill in date and party name');
+                return;
+            }
+
+            const newEvent = {
+                id: Date.now().toString(),
+                ...state.formData,
+                // Ensure numbers are stored as numbers where it matters
+                ticketPrice: state.formData.ticketPrice
+                    ? parseFloat(state.formData.ticketPrice)
+                    : 0,
+                timestamp: new Date().toISOString()
+            };
+
+            storage.set(`event:${newEvent.id}`, newEvent);
+            state.events.unshift(newEvent);
+
+            // Reset form (using the same App State order)
+            state.formData = {
+                date: new Date().toISOString().split('T')[0],
+                partyName: '',
+                place: '',
+                city: '',
+                type: '',
+                after: '',
+                ticketPrice: '',
+                checkboxes: {
+                    We: false,
+                    Ed: false,
+                    Al: false,
+                    MD: false,
+                    Xt: false,
+                    Ka: false,
+                    K: false,
+                    C: false,
+                    Sh: false,
+		   '3M': false,
+    		'2C': false,
+    		L: false
+                },
+                notes: ''
+            };
+
+            alert('One more party saved!');
+            render();
+        }
+
+        // Delete event
+        function deleteEvent(id) {
+            if (confirm('Are you sure you want to delete this party?')) {
+                storage.delete(`event:${id}`);
+                state.events = state.events.filter(e => e.id !== id);
+                render();
+            }
+        }
+
+        // Calculate checkbox statistics by month and year
+        function calculateCheckboxStats() {
+            const letters = CHECKBOX_LETTERS;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            const thisMonthEvents = state.events.filter(e => {
+                const eventDate = new Date(e.date);
+                return (
+                    eventDate.getFullYear() === currentYear &&
+                    eventDate.getMonth() === currentMonth
+                );
+            });
+
+            const thisYearEvents = state.events.filter(e => {
+                const eventDate = new Date(e.date);
+                return eventDate.getFullYear() === currentYear;
+            });
+
+            const calculatePercentages = (events) => {
+                const result = {};
+                letters.forEach(letter => {
+                    const trueCount = events.filter(
+                        e => e.checkboxes && e.checkboxes[letter] === true
+                    ).length;
+                    result[letter] = events.length > 0
+                        ? (trueCount / events.length * 100).toFixed(1)
+                        : 0;
+                });
+                return result;
+            };
+
+            return {
+                monthly: {
+                    count: thisMonthEvents.length,
+                    percentages: calculatePercentages(thisMonthEvents)
+                },
+                yearly: {
+                    count: thisYearEvents.length,
+                    percentages: calculatePercentages(thisYearEvents)
+                },
+                allTime: {
+                    count: state.events.length,
+                    percentages: calculatePercentages(state.events)
+                }
+            };
+        }
+
+        // Calculate statistics
+        function calculateStats() {
+            if (state.events.length === 0) return null;
+
+            const totalEvents = state.events.length;
+            const totalTicketPrice = state.events.reduce(
+                (sum, e) => sum + (parseFloat(e.ticketPrice) || 0),
+                0
+            );
+            const avgTicketPrice = totalEvents > 0
+                ? totalTicketPrice / totalEvents
+                : 0;
+
+            // Events by type
+            const typeCount = {};
+            state.events.forEach(e => {
+                if (e.type) {
+                    typeCount[e.type] = (typeCount[e.type] || 0) + 1;
+                }
+            });
+
+            // Events by city (free-form)
+            const cityCount = {};
+            state.events.forEach(e => {
+                if (e.city) {
+                    cityCount[e.city] = (cityCount[e.city] || 0) + 1;
+                }
+            });
+
+            // Events by place (free-form)
+            const placeCount = {};
+            state.events.forEach(e => {
+                if (e.place) {
+                    placeCount[e.place] = (placeCount[e.place] || 0) + 1;
+                }
+            });
+
+            const checkboxStats = calculateCheckboxStats();
+
+            return {
+                totalEvents,
+                totalTicketPrice,
+                avgTicketPrice,
+                typeCount,
+                cityCount,
+                placeCount,
+                checkboxStats
+            };
+        }
+
+        // Render function
+        function render() {
+            const stats = calculateStats();
+            const app = document.getElementById('app');
+
+            app.innerHTML = `
+                <div class="max-w-4xl mx-auto p-4">
+                    <!-- Header -->
+                    <div class="bg-dark rounded-lg shadow-neon p-6 mb-6 border border-neon">
+                        <h1 class="text-3xl font-bold text-neon mb-4">PartyGraph</h1>
+                        
+                        <div class="flex gap-4">
+                            <button onclick="switchView('add')"
+    class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+    ➕ Add Event
+</button>
+                            <button onclick="switchView('stats')"
+    class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'stats' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+    📊 Statistics
+</button>
+                        </div>
+                    </div>
+                    ${state.view === 'add' ? renderAddView() : renderStatsView(stats)}
+                </div>
+            `;
+        }
+
+        function renderAddView() {
+            return `
+                <div class="bg-dark rounded-lg shadow-neon p-6 border border-neon">
+                    <h2 class="text-2xl font-bold text-neon mb-6">Log a New Party</h2>
+                
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-neon mb-2">📅 Date *</label>
+                                <input
+                                    type="date"
+                                    id="date"
+                                    value="${state.formData.date}"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-purple-500"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-neon mb-2">Party Name *</label>
+                                <input
+                                    type="text"
+                                    id="partyName"
+                                    value="${state.formData.partyName}"
+                                    placeholder="e.g., Raw, Virtualis"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-purple-500"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-neon mb-2">🏛️ Place</label>
+                                <input
+                                    type="text"
+                                    id="place"
+                                    value="${state.formData.place}"
+                                    placeholder="e.g., specific warehouse / venue name"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-purple-500"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-neon mb-2">📍 City</label>
+                                <input
+                                    type="text"
+                                    id="city"
+                                    value="${state.formData.city}"
+                                    placeholder="e.g., Montreal"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-neon mb-2">Type</label>
+                                <select
+                                    id="type"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon"
+                                >
+                                    <option value="">Select type...</option>
+                                    <option value="Warehouse" ${state.formData.type === 'Warehouse' ? 'selected' : ''}>Warehouse</option>
+                                    <option value="Venue" ${state.formData.type === 'Venue' ? 'selected' : ''}>Venue</option>
+                                    <option value="Club" ${state.formData.type === 'Club' ? 'selected' : ''}>Club</option>
+                                    <option value="Repurposed Place" ${state.formData.type === 'Repurposed Place' ? 'selected' : ''}>Repurposed Place</option>
+                                    <option value="Other" ${state.formData.type === 'Other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+    <input
+        type="checkbox"
+        id="after"
+        ${state.formData.after ? 'checked' : ''}
+        class="w-5 h-5 text-purple-600 rounded focus:neon"
+    >
+    <label class="text-sm font-semibold text-neon">After (Yes/No)</label>
+</div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-neon mb-2">💵 Ticket Price ($)</label>
+                                <input
+                                    type="number"
+                                    id="ticketPrice"
+                                    value="${state.formData.ticketPrice}"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-purple-500"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Checkbox Section -->
+                        <div class="border-2 border-neon rounded-lg p-4 bg-dark shadow-neon">
+                            <label class="block text-sm font-semibold text-neon mb-3">Attributes</label>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => `
+                                    <label class="flex items-center gap-2 cursor-pointer bg-dark p-2 rounded border border-neon hover:border-neon transition shadow-neon">
+                                        <input
+                                            type="checkbox"
+                                            id="cb_${letter}"
+                                            ${state.formData.checkboxes[letter] ? 'checked' : ''}
+                                            class="w-4 h-4 text-neon rounded focus:ring-neon"
+                                        >
+                                        <span class="font-semibold text-neon">${letter}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-neon mb-2">Notes</label>
+                            <textarea
+                                id="notes"
+                                rows="3"
+                                placeholder="Additional details..."
+                                class="w-full px-4 py-2 bg-dark text-neon border border-neon rounded-lg focus:ring-2 focus:ring-neon"
+                            >${state.formData.notes}</textarea>
+                        </div>
+
+                        <button
+                            onclick="handleSave()"
+                            class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-md"
+                        >
+                            Save Event
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStatsView(stats) {
+            if (!stats) {
+                return `
+                    <div class="bg-dark rounded-lg shadow-neon p-12 text-center border border-neon">
+                        <div class="text-6xl mb-4">📊</div>
+                        <h3 class="text-xl font-bold text-neon mb-2">No Parties Yet</h3>
+                        <p class="text-neon mb-4">Start adding parties to see statistics!</p>
+                        <button
+                            onclick="switchView('add')"
+                            class="bg-neon text-dark px-6 py-2 rounded-lg font-semibold hover:bg-neon/80 transition-colors shadow-neon"
+                        >
+                            Add Your First Party
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="space-y-6">
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="text-sm text-neon mb-1">Total Parties</div>
+                            <div class="text-3xl font-bold text-purple-600">${stats.totalEvents}</div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="text-sm text-neon mb-1">Total Spent</div>
+                            <div class="text-3xl font-bold text-green-600">$${stats.totalTicketPrice.toFixed(2)}</div>
+                            <div class="text-xs text-neon mt-1">Avg: $${stats.avgTicketPrice.toFixed(2)}</div>
+                        </div>
+                    </div>
+
+                    <!-- Attribute Statistics -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-neon mb-4">Attribute Statistics</h3>
+                        
+                        <!-- This Month -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
+                                This Month (${stats.checkboxStats.monthly.count} events)
+                            </h4>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => `
+                                    <div class="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
+                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                                        <div class="text-xl font-semibold text-neon">
+                                            ${stats.checkboxStats.monthly.percentages[letter]}%
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- This Year -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-blue-600 mb-3">
+                                This Year (${stats.checkboxStats.yearly.count} events)
+                            </h4>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => `
+                                    <div class="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
+                                        <div class="text-2xl font-bold text-blue-600">${letter}</div>
+                                        <div class="text-xl font-semibold text-neon">
+                                            ${stats.checkboxStats.yearly.percentages[letter]}%
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- All Time -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-neon mb-3">
+                                All Time (${stats.checkboxStats.allTime.count} events)
+                            </h4>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => `
+                                    <div class="bg-neon rounded-lg p-3 text-center border border-neon">
+                                        <div class="text-2xl font-bold text-neon">${letter}</div>
+                                        <div class="text-xl font-semibold text-neon">
+                                            ${stats.checkboxStats.allTime.percentages[letter]}%
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Type Breakdown -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-neon mb-4">Events by Type</h3>
+                        <div class="space-y-3">
+                            ${Object.entries(stats.typeCount).map(([type, count]) => `
+                                <div class="flex items-center">
+                                    <div class="w-32 text-sm font-semibold text-neon">${type}</div>
+                                    <div class="flex-1 bg-neon rounded-full h-6 relative">
+                                        <div
+                                            class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
+                                            style="width: ${(count / stats.totalEvents) * 100}%"
+                                        >
+                                            ${count}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- City Breakdown -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-neon mb-4">Events by City</h3>
+                        <div class="space-y-3">
+                            ${Object.entries(stats.cityCount).map(([city, count]) => `
+                                <div class="flex items-center">
+                                    <div class="w-32 text-sm font-semibold text-neon">${city}</div>
+                                    <div class="flex-1 bg-neon rounded-full h-6 relative">
+                                        <div
+                                            class="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
+                                            style="width: ${(count / stats.totalEvents) * 100}%"
+                                        >
+                                            ${count}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Place Breakdown -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-neon mb-4">Events by Place</h3>
+                        <div class="space-y-3">
+                            ${Object.entries(stats.placeCount).map(([place, count]) => `
+                                <div class="flex items-center">
+                                    <div class="w-40 text-sm font-semibold text-neon truncate">${place}</div>
+                                    <div class="flex-1 bg-neon rounded-full h-6 relative ml-2">
+                                        <div
+                                            class="bg-green-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
+                                            style="width: ${(count / stats.totalEvents) * 100}%"
+                                        >
+                                            ${count}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Event List -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold text-neon mb-4">All Events</h3>
+                        <div class="space-y-3 max-h-96 overflow-y-auto">
+                            ${state.events.map(event => `
+                                <div class="border border-neon rounded-lg p-4 hover:shadow-md transition-shadow">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-bold text-neon">${event.partyName}</div>
+                                            <div class="text-sm text-neon">
+                                                ${event.date}
+                                                ${event.city ? ` • ${event.city}` : ''}
+                                                ${event.place ? ` • ${event.place}` : ''}
+                                            </div>
+                                        </div>
+                                        <button
+                                            onclick="deleteEvent('${event.id}')"
+                                            class="text-red-500 hover:text-red-700 p-1"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-sm mb-2">
+                                        ${event.type ? `<div><span class="text-neon">Type:</span> ${event.type}</div>` : ''}
+                                        ${event.ticketPrice
+                                            ? `<div><span class="text-neon">Ticket Price:</span> $${event.ticketPrice.toFixed(2)}</div>`
+                                            : ''
+                                        }
+                                        <div class="col-span-2">
+    <span class="text-neon">After:</span> ${event.after ? 'Yes' : 'No'}
+</div>
+                                    ${event.checkboxes ? `
+                                        <div class="flex gap-2 flex-wrap mb-2">
+                                            ${CHECKBOX_LETTERS
+                                                .filter(l => event.checkboxes[l])
+                                                .map(l => `
+                                                    <span class="bg-dark text-neon border border-neon px-2 py-1 rounded text-xs font-semibold shadow-neon">
+                                                        ${l}
+                                                    </span>
+                                                `).join('')}
+                                        </div>
+                                    ` : ''}
+                                    ${event.notes
+                                        ? `<div class="text-sm text-neon mt-2 italic">${event.notes}</div>`
+                                        : ''
+                                    }
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event handlers
+        function switchView(view) {
+            state.view = view;
+            render();
+        }
+
+        function handleSave() {
+            // Get checkbox values using the canonical letters
+            const checkboxes = {};
+            CHECKBOX_LETTERS.forEach(letter => {
+                const checkbox = document.getElementById(`cb_${letter}`);
+                checkboxes[letter] = checkbox ? checkbox.checked : false;
+            });
+
+            state.formData = {
+                date: document.getElementById('date').value,
+                partyName: document.getElementById('partyName').value,
+                place: document.getElementById('place').value,
+                city: document.getElementById('city').value,
+                type: document.getElementById('type').value,
+                after: document.getElementById('after').checked,
+                ticketPrice: document.getElementById('ticketPrice').value,
+                notes: document.getElementById('notes').value,
+                checkboxes: checkboxes
+            };
+
+            saveEvent();
+        }
+
+        // Initialize app
+        loadEvents();
+        render();
+
+        // Install prompt for PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            const installBtn = document.createElement('button');
+            installBtn.className = 'fixed bottom-4 right-4 bg-neon text-dark px-4 py-2 rounded-lg shadow-neon hover:bg-neon/80 z-50';
+            installBtn.innerHTML = '📱 Install App';
+            installBtn.onclick = async () => {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                installBtn.remove();
+            };
+            document.body.appendChild(installBtn);
+        });
+    </script>
+</body>
+</html>
