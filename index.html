@@ -50,8 +50,9 @@
     <script>
         // Service Worker Registration for PWA
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgKGUpID0+IHsKICBzZWxmLnNraXBXYWl0aW5nKCk7Cn0pOwoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdhY3RpdmF0ZScsIChlKSA9PiB7CiAgc2VsZi5jbGllbnRzLmNsYWltKCk7Cn0pOwoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdmZXRjaCcsIChlKSA9PiB7CiAgZS5yZXNwb25kV2l0aChmZXRjaChlLnJlcXVlc3QpKTsKfSk7');
-        }
+            navigator.serviceWorker.register('/service-worker.js')
+				.catch(err => console.error('SW registration failed:', err));
+}
 
         // Local Storage Implementation
         const storage = {
@@ -690,3 +691,4 @@
     </script>
 </body>
 </html>
+
