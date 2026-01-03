@@ -298,10 +298,10 @@
                         <h1 class="text-3xl font-bold text-neon">PartyGraph</h1>
                        
 						<div class="flex gap-2 self-start">
-            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon hover: shadow-neon">
+            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon">
                 💾
             </button>
-            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon hover: shadow-neon">
+            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon">
                 📥
             </button>
         </div>
@@ -331,7 +331,7 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-semibold text-neon mb-2">📅 Date *</label>
+                                <label class="block text-sm font-semibold text-neon mb-2">📅 Date</label>
                                 <input
                                     type="date"
                                     id="date"
@@ -341,7 +341,7 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-semibold text-neon mb-2">Party Name *</label>
+                                <label class="block text-sm font-semibold text-neon mb-2">Party Name</label>
                                 <input
                                     type="text"
                                     id="partyName"
@@ -368,7 +368,7 @@
                                     type="text"
                                     id="city"
                                     value="${state.formData.city}"
-                                    placeholder="e.g., Montreal"
+                                    placeholder="e.g., Montreal, Chicago"
                                     class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon"
                                 >
                             </div>
@@ -387,18 +387,8 @@
                                     <option value="Other" ${state.formData.type === 'Other' ? 'selected' : ''}>Other</option>
                                 </select>
                             </div>
-
-                            <div class="flex items-center gap-2">
-    <input
-        type="checkbox"
-        id="after"
-        ${state.formData.after ? 'checked' : ''}
-        class="w-5 h-5 text-purple-600 rounded focus:neon"
-    >
-    <label class="text-sm font-semibold text-neon">After (Yes/No)</label>
-</div>
-
-                            <div>
+							
+							<div>
                                 <label class="block text-sm font-semibold text-neon mb-2">💵 Ticket Price ($)</label>
                                 <input
                                     type="number"
@@ -410,10 +400,18 @@
                                     class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon"
                                 >
                             </div>
-                        </div>
-
-                        <!-- Checkbox Section -->
-                        <div class="border-2 border-neon rounded-lg p-4 bg-dark shadow-neon">
+						
+                     <div class="flex items-center gap-2">
+    					<input
+      					  type="checkbox"
+       				      id="after"
+       			 		   ${state.formData.after ? 'checked' : ''}
+        					class="w-5 h-5 text-purple-600 rounded focus:neon" >
+   					 <label class="text-sm font-semibold text-neon">After?</label>
+					</div>
+       </div>
+                        <!-- Products Section -->
+                        <div class="border-2 border-neon rounded-lg p-4 bg-dark">
                             <label class="block text-sm font-semibold text-neon mb-3">Attributes</label>
                             <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
                                 ${CHECKBOX_LETTERS.map(letter => `
@@ -430,8 +428,8 @@
                             </div>
                         </div>
 
-                        <div class="border-2 border-neon rounded-lg p-4 bg-dark shadow-neon">
-                            <label class="block text-sm font-semibold text-neon mb-3">📷 Event Photo (Optional)</label>
+                        <div class="border-2 border-neon rounded-lg p-4 bg-dark">
+                            <label class="block text-sm font-semibold text-neon mb-3">📷 Upload One Photo? (Optional)</label>
                             <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
                             <div id="photoPreview" class="mb-3">
                                 ${state.formData.photo ? `
@@ -462,7 +460,7 @@
 
                         <button
                             onclick="handleSave()"
-                            class="w-full bg-dark text-neon py-3 rounded-lg font-semibold hover:bg-neon transition-colors shadow-md"
+                            class="w-full bg-dark text-neon py-3 rounded-lg font-semibold border border-neon hover:shadow-neon transition-colors shadow-md"
                         >
                             Save Event
                         </button>
@@ -505,7 +503,7 @@
                     </div>
 
                     <!-- Products Statistics -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="bg-dark rounded-lg shadow-lg p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">Products Statistics</h3>
                         
                         <!-- This Month -->
@@ -515,7 +513,7 @@
                             </h4>
                             <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
                                 ${CHECKBOX_LETTERS.map(letter => `
-                                    <div class="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
+                                    <div class="bg-white rounded-lg p-3 text-center border border-purple-600">
                                         <div class="text-2xl font-bold text-purple-600">${letter}</div>
                                         <div class="text-xl font-semibold text-neon">
                                             ${stats.checkboxStats.monthly.percentages[letter]}%
@@ -853,6 +851,7 @@
     </script>
 </body>
 </html>
+
 
 
 
