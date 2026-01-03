@@ -492,12 +492,12 @@
 				
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-dark rounded-lg border border-neon shadow-neon p-6">
+                        <div class="bg-dark rounded-lg border border-neon p-6">
                             <div class="text-sm text-neon mb-1">Total Parties</div>
                             <div class="text-3xl font-bold text-neon">${stats.totalEvents}</div>
                         </div>
                         
-                        <div class="bg-dark rounded-lg border border-neon shadow-neon p-6">
+                        <div class="bg-dark rounded-lg border border-neon p-6">
                             <div class="text-sm text-neon mb-1">Total Spent</div>
                             <div class="text-3xl font-bold text-neon">$${stats.totalTicketPrice.toFixed(2)}</div>
                             <div class="text-xs text-neon mt-1">Avg: $${stats.avgTicketPrice.toFixed(2)}</div>
@@ -505,7 +505,7 @@
                     </div>
 
                     <!-- Products Statistics -->
-                    <div class="bg-dark rounded-lg shadow-lg p-6">
+                    <div class="bg-dark rounded-lg shadow-lg border border-neon p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">Products Statistics</h3>
                         
                         <!-- This Month -->
@@ -513,9 +513,9 @@
                             <h4 class="text-lg font-semibold text-purple-600 mb-3">
                                 This Month (${stats.checkboxStats.monthly.count} events)
                             </h4>
-                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-9 gap-4">
                                 ${CHECKBOX_LETTERS.map(letter => `
-                                    <div class="bg-white rounded-lg p-3 text-center border border-purple-600">
+                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
                                         <div class="text-2xl font-bold text-purple-600">${letter}</div>
                                         <div class="text-xl font-semibold text-neon">
                                             ${stats.checkboxStats.monthly.percentages[letter]}%
@@ -527,13 +527,13 @@
 
                         <!-- This Year -->
                         <div class="mb-6">
-                            <h4 class="text-lg font-semibold text-blue-600 mb-3">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
                                 This Year (${stats.checkboxStats.yearly.count} events)
                             </h4>
                             <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
                                 ${CHECKBOX_LETTERS.map(letter => `
-                                    <div class="bg-blue-50 rounded-lg p-3 text-center border border-blue-200">
-                                        <div class="text-2xl font-bold text-blue-600">${letter}</div>
+                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
                                         <div class="text-xl font-semibold text-neon">
                                             ${stats.checkboxStats.yearly.percentages[letter]}%
                                         </div>
@@ -544,13 +544,13 @@
 
                         <!-- All Time -->
                         <div>
-                            <h4 class="text-lg font-semibold text-neon mb-3">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
                                 All Time (${stats.checkboxStats.allTime.count} events)
                             </h4>
                             <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
                                 ${CHECKBOX_LETTERS.map(letter => `
-                                    <div class="bg-neon rounded-lg p-3 text-center border border-neon">
-                                        <div class="text-2xl font-bold text-neon">${letter}</div>
+                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
                                         <div class="text-xl font-semibold text-neon">
                                             ${stats.checkboxStats.allTime.percentages[letter]}%
                                         </div>
@@ -561,7 +561,7 @@
                     </div>
 
                     <!-- Type Breakdown -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">Events by Type</h3>
                         <div class="space-y-3">
                             ${Object.entries(stats.typeCount).map(([type, count]) => `
@@ -581,7 +581,7 @@
                     </div>
 
                     <!-- City Breakdown -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">Events by City</h3>
                         <div class="space-y-3">
                             ${Object.entries(stats.cityCount).map(([city, count]) => `
@@ -589,7 +589,7 @@
                                     <div class="w-32 text-sm font-semibold text-neon">${city}</div>
                                     <div class="flex-1 bg-neon rounded-full h-6 relative">
                                         <div
-                                            class="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
+                                            class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
                                             style="width: ${(count / stats.totalEvents) * 100}%"
                                         >
                                             ${count}
@@ -601,7 +601,7 @@
                     </div>
 
                     <!-- Place Breakdown -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">Events by Place</h3>
                         <div class="space-y-3">
                             ${Object.entries(stats.placeCount).map(([place, count]) => `
@@ -609,7 +609,7 @@
                                     <div class="w-40 text-sm font-semibold text-neon truncate">${place}</div>
                                     <div class="flex-1 bg-neon rounded-full h-6 relative ml-2">
                                         <div
-                                            class="bg-green-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
+                                            class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
                                             style="width: ${(count / stats.totalEvents) * 100}%"
                                         >
                                             ${count}
@@ -621,7 +621,7 @@
                     </div>
 
                     <!--Event List -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">All Events</h3>
                         <div class="space-y-3 max-h-96 overflow-y-auto">
                             ${state.events.map(event => `
@@ -643,15 +643,23 @@
                                         </button>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2 text-sm mb-2">
-                                        ${event.type ? `<div><span class="text-neon">Type:</span> ${event.type}</div>` : ''}
+                                        ${event.type 
+										  ? `<div>
+										  			<span class="text-neon">Type:</span> 
+													<span class="text-neon">${event.type}</span>
+											</div>` : ''}
                                         ${event.ticketPrice
-                                            ? `<div><span class="text-neon">Ticket Price:</span> $${event.ticketPrice.toFixed(2)}</div>`
+                                            ? `<div>
+													<span class="text-neon">Ticket Price:</span> 
+													<span class="text-neon">$${event.ticketPrice.toFixed(2)}</span>
+												</div>`
                                             : ''
                                         }
                                         <div class="col-span-2">
-    <span class="text-neon">After:</span> ${event.after ? 'Yes' : 'No'}
-</div>
-</div>
+   												    <span class="text-neon">After:</span> 
+													<span class="text-neon">${event.after ? 'Yes' : 'No'}</span>
+										</div>
+						</div>
                                     ${event.checkboxes ? `
                                         <div class="flex gap-2 flex-wrap mb-2">
                                             ${CHECKBOX_LETTERS
@@ -853,6 +861,7 @@
     </script>
 </body>
 </html>
+
 
 
 
