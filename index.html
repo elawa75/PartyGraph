@@ -41,10 +41,11 @@
         }
     </style>
 </head>
+	
 <body class="bg-[#1A1423] min-h-screen text-neon-green">
     <div id="app"> <style>
     .text-neon-green {
-        color: #39FF14; /* bright neon green */
+        color: #39FF14;
     }
 </style>
 </div>
@@ -293,8 +294,18 @@
                 <div class="max-w-4xl mx-auto p-4">
                     <!-- Header -->
                     <div class="bg-dark rounded-lg shadow-neon p-6 mb-6 border border-neon">
+					<div class="flex justify-between items-center mb-4">
                         <h1 class="text-3xl font-bold text-neon mb-4">PartyGraph</h1>
-                        
+                       
+						<div class="flex gap-2">
+            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+                💾
+            </button>
+            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+                📥
+            </button>
+        </div>
+    </div>
                         <div class="flex gap-4">
                             <button onclick="switchView('add')"
     class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
@@ -304,13 +315,7 @@
     class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'stats' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
     📊 Statistics
 </button>
-						<button onclick="exportData()" class="flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all bg-dark text-blue-700 hover:bg-neon">
-     💾 Export
-       </button>
-                          <button onclick="importData()" class="flex items-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all bg-dark text-blue-700 hover:bg-neon">
-  📥 Import
-  </button>
-                        </div>
+				</div>
                         <input type="file" id="importFile" accept=".json" class="hidden" onchange="handleImportFile(event)">
                     </div>
                     ${state.view === 'add' ? renderAddView() : renderStatsView(stats)}
@@ -848,6 +853,7 @@
     </script>
 </body>
 </html>
+
 
 
 
