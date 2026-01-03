@@ -295,13 +295,13 @@
                     <!-- Header -->
                     <div class="bg-dark rounded-lg shadow-neon p-6 mb-6 border border-neon">
 					<div class="flex justify-between items-center mb-4">
-                        <h1 class="text-3xl font-bold text-neon mb-4">PartyGraph</h1>
+                        <h1 class="text-3xl font-bold text-neon">PartyGraph</h1>
                        
 						<div class="flex gap-2">
-            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon hover:shadow-neon">
                 💾
             </button>
-            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon hover: shadow-neon">
                 📥
             </button>
         </div>
@@ -853,6 +853,7 @@
     </script>
 </body>
 </html>
+
 
 
 
