@@ -508,74 +508,70 @@
                         </div>
                     </div>
 
-                    <!-- Products Statistics -->
-                    <div class="bg-dark rounded-lg shadow-lg border border-neon p-6">
-                        <h3 class="text-xl font-bold text-neon mb-4">Products Statistics</h3>
-                        
-                        <!-- This Year -->
-                        <div class="mb-6">
-                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
-                                This Year (${stats.checkboxStats.yearly.count} events)
-                            </h4>
-                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
-                                ${CHECKBOX_LETTERS.map(letter => `
-                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
-                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
-                                        <div class="text-xl font-semibold text-neon">
-                                            ${stats.checkboxStats.yearly.percentages[letter]}%
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
+                   <!-- Products Statistics -->
+				   <div class="bg-dark rounded-lg shadow-lg border border-neon p-6">
+				   <h3 class="text-xl font-bold text-neon mb-4">Products Statistics</h3>
+    
+    <!-- This Year -->
+    <div class="mb-6">
+        <h4 class="text-lg font-semibold text-purple-600 mb-3">
+            This Year (${stats.checkboxStats.yearly.count} events)
+        </h4>
+        <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+            ${CHECKBOX_LETTERS.map(letter => `
+                <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                    <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                    <div class="text-xl font-semibold text-neon">
+                        ${stats.checkboxStats.yearly.percentages[letter]}%
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    </div>
 
-                        <!-- All Time -->
-                        <div>
-                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
-                                All Time (${stats.checkboxStats.allTime.count} events)
-                            </h4>
-                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
-                                ${CHECKBOX_LETTERS.map(letter => `
-                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
-                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
-                                        <div class="text-xl font-semibold text-neon">
-                                            ${stats.checkboxStats.allTime.percentages[letter]}%
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-						
-						<!-- Records -->
-						<div class="mb-6">
-						<h4 class="text-lg font-semibold text-purple-600 mb-3">
-							Records
-						</h4>
-						<div class="grid grid-cols-3 md:grid-cols-9 gap-3">
-							${CHECKBOX_LETTERS.map(letter => {
-								const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            
-								// Count occurrences per month for this letter
-								const monthlyCounts = Array(12).fill(0);
-								state.entries.forEach(entry => {
-									if (entry.checkboxes?.[letter] === true) {
-										const m = new Date(entry.date).getMonth();
-										monthlyCounts[m]++;
-									}
-								});
-								
-								const max = Math.max(...monthlyCounts);
-								const bestMonth = max === 0 ? '—' : monthNames[monthlyCounts.indexOf(max)];
+    <!-- All Time -->
+    <div class="mb-6">
+        <h4 class="text-lg font-semibold text-purple-600 mb-3">
+            All Time (${stats.checkboxStats.allTime.count} events)
+        </h4>
+        <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+            ${CHECKBOX_LETTERS.map(letter => `
+                <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                    <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                    <div class="text-xl font-semibold text-neon">
+                        ${stats.checkboxStats.allTime.percentages[letter]}%
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    </div>
 
-								return `
-									<div class="bg-dark rounded-lg p-3 text-center border border-neon">
-									<div class="text-2xl font-bold text-purple-600">${letter}</div>
-									<div class="text-xl font-semibold text-neon">${bestMonth}</div>
-								</div>
-							`;
-						}).join('')}
-					</div>
-				</div>
+    <!-- Records -->
+    <div>
+        <h4 class="text-lg font-semibold text-purple-600 mb-3">Records</h4>
+        <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+            ${CHECKBOX_LETTERS.map(letter => {
+                const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const monthlyCounts = Array(12).fill(0);
+                state.entries.forEach(entry => {
+                    if (entry.checkboxes?.[letter] === true) {
+                        const m = new Date(entry.date).getMonth();
+                        monthlyCounts[m]++;
+                    }
+                });
+                const max = Math.max(...monthlyCounts);
+                const bestMonth = max === 0 ? '—' : monthNames[monthlyCounts.indexOf(max)];
+                return `
+                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                        <div class="text-xl font-semibold text-neon">${bestMonth}</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    </div>
+
+</div>
 
                     <!-- Type Breakdown -->
                     <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
