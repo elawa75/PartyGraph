@@ -43,6 +43,11 @@
                 padding-bottom: env(safe-area-inset-bottom);
             }
         }
+        /* Fix date input overflow on iOS */
+        input[type="date"] {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 	
@@ -93,7 +98,6 @@
             view: 'add',
             events: [],
             formData: {
-                // Order here is the canonical order
                 date: new Date().toISOString().split('T')[0],
                 partyName: '',
                 place: '',
@@ -103,19 +107,9 @@
                 ticketPrice: '',
 				photo: null,
                 checkboxes: {
-    We: false,
-    Ed: false,
-    Al: false,
-    MD: false,
-    Xt: false,
-    Ka: false,
-    K: false,
-    C: false,
-    Sh: false,
-    '3M': false,
-    '2C': false,
-    L: false
-
+                    We: false, Ed: false, Al: false, MD: false,
+                    Xt: false, Ka: false, K: false, C: false,
+                    Sh: false, '3M': false, '2C': false, L: false
                 },
                 notes: ''
             }
@@ -140,7 +134,6 @@
             const newEvent = {
                 id: Date.now().toString(),
                 ...state.formData,
-                // Ensure numbers are stored as numbers where it matters
                 ticketPrice: state.formData.ticketPrice
                     ? parseFloat(state.formData.ticketPrice)
                     : 0,
@@ -150,7 +143,6 @@
             storage.set(`event:${newEvent.id}`, newEvent);
             state.events.unshift(newEvent);
 
-            // Reset form (same as App State)
             state.formData = {
                 date: new Date().toISOString().split('T')[0],
                 partyName: '',
@@ -161,18 +153,9 @@
                 ticketPrice: '',
 				photo: null,
                 checkboxes: {
-                    We: false,
-                    Ed: false,
-                    Al: false,
-                    MD: false,
-                    Xt: false,
-                    Ka: false,
-                    K: false,
-                    C: false,
-                    Sh: false,
-		   '3M': false,
-    		'2C': false,
-    		L: false
+                    We: false, Ed: false, Al: false, MD: false,
+                    Xt: false, Ka: false, K: false, C: false,
+                    Sh: false, '3M': false, '2C': false, L: false
                 },
                 notes: ''
             };
@@ -190,7 +173,7 @@
             }
         }
 
-        // Calculate checkbox statistics by month and year
+        // Calculate checkbox statistics
         function calculateCheckboxStats() {
             const letters = CHECKBOX_LETTERS;
             const now = new Date();
@@ -199,10 +182,7 @@
 
             const thisMonthEvents = state.events.filter(e => {
                 const eventDate = new Date(e.date);
-                return (
-                    eventDate.getFullYear() === currentYear &&
-                    eventDate.getMonth() === currentMonth
-                );
+                return eventDate.getFullYear() === currentYear && eventDate.getMonth() === currentMonth;
             });
 
             const thisYearEvents = state.events.filter(e => {
@@ -213,12 +193,8 @@
             const calculatePercentages = (events) => {
                 const result = {};
                 letters.forEach(letter => {
-                    const trueCount = events.filter(
-                        e => e.checkboxes && e.checkboxes[letter] === true
-                    ).length;
-                    result[letter] = events.length > 0
-                        ? (trueCount / events.length * 100).toFixed(1)
-                        : 0;
+                    const trueCount = events.filter(e => e.checkboxes && e.checkboxes[letter] === true).length;
+                    result[letter] = events.length > 0 ? (trueCount / events.length * 100).toFixed(1) : 0;
                 });
                 return result;
             };
@@ -244,49 +220,27 @@
             if (state.events.length === 0) return null;
 
             const totalEvents = state.events.length;
-            const totalTicketPrice = state.events.reduce(
-                (sum, e) => sum + (parseFloat(e.ticketPrice) || 0),
-                0
-            );
-            const avgTicketPrice = totalEvents > 0
-                ? totalTicketPrice / totalEvents
-                : 0;
+            const totalTicketPrice = state.events.reduce((sum, e) => sum + (parseFloat(e.ticketPrice) || 0), 0);
+            const avgTicketPrice = totalEvents > 0 ? totalTicketPrice / totalEvents : 0;
 
-            // Events by type
             const typeCount = {};
             state.events.forEach(e => {
-                if (e.type) {
-                    typeCount[e.type] = (typeCount[e.type] || 0) + 1;
-                }
+                if (e.type) typeCount[e.type] = (typeCount[e.type] || 0) + 1;
             });
 
-            // Events by city (free-form)
             const cityCount = {};
             state.events.forEach(e => {
-                if (e.city) {
-                    cityCount[e.city] = (cityCount[e.city] || 0) + 1;
-                }
+                if (e.city) cityCount[e.city] = (cityCount[e.city] || 0) + 1;
             });
 
-            // Events by place (free-form)
             const placeCount = {};
             state.events.forEach(e => {
-                if (e.place) {
-                    placeCount[e.place] = (placeCount[e.place] || 0) + 1;
-                }
+                if (e.place) placeCount[e.place] = (placeCount[e.place] || 0) + 1;
             });
 
             const checkboxStats = calculateCheckboxStats();
 
-            return {
-                totalEvents,
-                totalTicketPrice,
-                avgTicketPrice,
-                typeCount,
-                cityCount,
-                placeCount,
-                checkboxStats
-            };
+            return { totalEvents, totalTicketPrice, avgTicketPrice, typeCount, cityCount, placeCount, checkboxStats };
         }
 
         // Render function
@@ -300,26 +254,21 @@
                     <div class="bg-dark rounded-lg shadow-neon p-6 mb-6 border border-neon">
 					<div class="flex justify-between items-center mb-4">
                         <h1 class="text-3xl font-bold text-neon">PartyGraph</h1>
-                       
-						<div class="flex gap-2 self-start">
-            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon">
-                💾
-            </button>
-            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon">
-                📥
-            </button>
-        </div>
-    </div>
+                        <div class="flex gap-2 self-start">
+                            <button onclick="exportData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon">💾</button>
+                            <button onclick="importData()" class="px-3 py-1.5 rounded-lg text-sm font-semibold transition-all bg-dark text-neon border border-neon">📥</button>
+                        </div>
+                    </div>
                         <div class="flex gap-4">
                             <button onclick="switchView('add')"
-    class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
-    ➕ Add Rave
-</button>
+                                class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'add' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+                                ➕ Add Rave
+                            </button>
                             <button onclick="switchView('stats')"
-    class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'stats' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
-    📊 Statistics
-</button>
-				</div>
+                                class="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all ${state.view === 'stats' ? 'bg-dark text-neon border border-neon shadow-neon' : 'bg-gray-800 text-neon'}">
+                                📊 Statistics
+                            </button>
+                        </div>
                         <input type="file" id="importFile" accept=".json" class="hidden" onchange="handleImportFile(event)">
                     </div>
                     ${state.view === 'add' ? renderAddView() : renderStatsView(stats)}
@@ -334,15 +283,16 @@
                 
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="min-w-0">
-								<label class="block text-sm font-semibold text-neon mb-2">📅 Date</label>
-								<input
-									type="date"
-									id="date"
-									value="${state.formData.date}"
-									class="w-full max-w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon box-border"
-								>
-							</div>
+                            <div class="min-w-0 overflow-hidden">
+                                <label class="block text-sm font-semibold text-neon mb-2">📅 Date</label>
+                                <input
+                                    type="date"
+                                    id="date"
+                                    value="${state.formData.date}"
+                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon"
+                                    style="max-width:100%; box-sizing:border-box;"
+                                >
+                            </div>
 
                             <div>
                                 <label class="block text-sm font-semibold text-neon mb-2">Party Name</label>
@@ -379,10 +329,7 @@
 
                             <div>
                                 <label class="block text-sm font-semibold text-neon mb-2">Type</label>
-                                <select
-                                    id="type"
-                                    class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon"
-                                >
+                                <select id="type" class="w-full px-4 py-2 border border-neon rounded-lg focus:ring-2 focus:ring-neon">
                                     <option value="">Select type...</option>
                                     <option value="Warehouse" ${state.formData.type === 'Warehouse' ? 'selected' : ''}>Warehouse</option>
                                     <option value="Venue" ${state.formData.type === 'Venue' ? 'selected' : ''}>Venue</option>
@@ -392,7 +339,7 @@
                                 </select>
                             </div>
 							
-							<div>
+                            <div>
                                 <label class="block text-sm font-semibold text-neon mb-2">💵 Ticket Price ($)</label>
                                 <input
                                     type="number"
@@ -405,15 +352,11 @@
                                 >
                             </div>
 						
-                          		<div class="flex items-center gap-2">
-    				     		<input
-      					  			type="checkbox"
-       				      			id="after"
-       			 		   			${state.formData.after ? 'checked' : ''}
-        							class="w-5 h-5 text-neon rounded focus:neon" >
-   					 <label class="text-sm font-semibold text-neon">After?</label>
-							</div>
-       </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="after" ${state.formData.after ? 'checked' : ''} class="w-5 h-5 text-neon rounded focus:neon">
+                                <label class="text-sm font-semibold text-neon">After?</label>
+                            </div>
+                        </div>
 	   
                         <!-- Products Section -->
                         <div class="border-2 border-neon rounded-lg p-4 bg-dark">
@@ -421,12 +364,7 @@
                             <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
                                 ${CHECKBOX_LETTERS.map(letter => `
                                     <label class="flex items-center gap-2 cursor-pointer bg-dark p-2 rounded border border-neon hover:border-neon transition">
-                                        <input
-                                            type="checkbox"
-                                            id="cb_${letter}"
-                                            ${state.formData.checkboxes[letter] ? 'checked' : ''}
-                                            class="w-4 h-4 text-neon rounded focus:ring-neon"
-                                        >
+                                        <input type="checkbox" id="cb_${letter}" ${state.formData.checkboxes[letter] ? 'checked' : ''} class="w-4 h-4 text-neon rounded focus:ring-neon">
                                         <span class="font-semibold text-neon">${letter}</span>
                                     </label>
                                 `).join('')}
@@ -440,33 +378,20 @@
                                 ${state.formData.photo ? `
                                     <div class="relative inline-block">
                                         <img src="${state.formData.photo}" class="max-w-full h-48 rounded-lg border-2 border-neon">
-                                        <button onclick="removePhoto()" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
-                                            ❌
-                                        </button>
+                                        <button onclick="removePhoto()" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">❌</button>
                                     </div>
                                 ` : `
-                                    <button onclick="document.getElementById('photoInput').click()" class="bg-dark text-neon text-sm px-4 py-2 rounded-lg hover:bg-dark transition-colors">
-                                        Choose Photo
-                                    </button>
+                                    <button onclick="document.getElementById('photoInput').click()" class="bg-dark text-neon text-sm px-4 py-2 rounded-lg hover:bg-dark transition-colors">Choose Photo</button>
                                 `}
                             </div>
                         </div>
 
-						
                         <div>
                             <label class="block text-sm font-semibold text-neon mb-2">Notes</label>
-                            <textarea
-                                id="notes"
-                                rows="3"
-                                placeholder="Additional details..."
-                                class="w-full px-4 py-2 bg-dark text-neon border border-neon rounded-lg focus:ring focus:ring-neon"
-                            >${state.formData.notes}</textarea>
+                            <textarea id="notes" rows="3" placeholder="Additional details..." class="w-full px-4 py-2 bg-dark text-neon border border-neon rounded-lg focus:ring focus:ring-neon">${state.formData.notes}</textarea>
                         </div>
 
-                        <button
-                            onclick="handleSave()"
-                            class="w-full bg-dark text-neon py-3 rounded-lg font-semibold border border-neon hover:shadow-neon transition-colors shadow-md"
-                        >
+                        <button onclick="handleSave()" class="w-full bg-dark text-neon py-3 rounded-lg font-semibold border border-neon hover:shadow-neon transition-colors shadow-md">
                             Save Event
                         </button>
                     </div>
@@ -481,10 +406,7 @@
                         <div class="text-6xl mb-4">📊</div>
                         <h3 class="text-xl font-bold text-neon mb-2">No Parties Yet</h3>
                         <p class="text-neon mb-4">Start adding parties to see statistics!</p>
-                        <button
-                            onclick="switchView('add')"
-                            class="bg-neon text-dark px-6 py-2 rounded-lg font-semibold hover:bg-neon/80 transition-colors shadow-neon"
-                        >
+                        <button onclick="switchView('add')" class="bg-neon text-dark px-6 py-2 rounded-lg font-semibold hover:bg-neon/80 transition-colors shadow-neon">
                             Add Your First Rave
                         </button>
                     </div>
@@ -500,7 +422,6 @@
                             <div class="text-sm text-neon mb-1">Total Parties</div>
                             <div class="text-3xl font-bold text-neon">${stats.totalEvents}</div>
                         </div>
-                        
                         <div class="bg-dark rounded-lg border border-neon p-6">
                             <div class="text-sm text-neon mb-1">Total Spent</div>
                             <div class="text-3xl font-bold text-neon">$${stats.totalTicketPrice.toFixed(2)}</div>
@@ -508,70 +429,65 @@
                         </div>
                     </div>
 
-                   <!-- Products Statistics -->
-				   <div class="bg-dark rounded-lg shadow-lg border border-neon p-6">
-				   <h3 class="text-xl font-bold text-neon mb-4">Products Statistics</h3>
-    
-    <!-- This Year -->
-    <div class="mb-6">
-        <h4 class="text-lg font-semibold text-purple-600 mb-3">
-            This Year (${stats.checkboxStats.yearly.count} events)
-        </h4>
-        <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
-            ${CHECKBOX_LETTERS.map(letter => `
-                <div class="bg-dark rounded-lg p-3 text-center border border-neon">
-                    <div class="text-2xl font-bold text-purple-600">${letter}</div>
-                    <div class="text-xl font-semibold text-neon">
-                        ${stats.checkboxStats.yearly.percentages[letter]}%
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    </div>
+                    <!-- Products Statistics -->
+                    <div class="bg-dark rounded-lg shadow-lg border border-neon p-6">
+                        <h3 class="text-xl font-bold text-neon mb-4">Products Statistics</h3>
+                        
+                        <!-- This Year -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
+                                This Year (${stats.checkboxStats.yearly.count} events)
+                            </h4>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => `
+                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                                        <div class="text-xl font-semibold text-neon">${stats.checkboxStats.yearly.percentages[letter]}%</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
 
-    <!-- All Time -->
-    <div class="mb-6">
-        <h4 class="text-lg font-semibold text-purple-600 mb-3">
-            All Time (${stats.checkboxStats.allTime.count} events)
-        </h4>
-        <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
-            ${CHECKBOX_LETTERS.map(letter => `
-                <div class="bg-dark rounded-lg p-3 text-center border border-neon">
-                    <div class="text-2xl font-bold text-purple-600">${letter}</div>
-                    <div class="text-xl font-semibold text-neon">
-                        ${stats.checkboxStats.allTime.percentages[letter]}%
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    </div>
+                        <!-- All Time -->
+                        <div class="mb-6">
+                            <h4 class="text-lg font-semibold text-purple-600 mb-3">
+                                All Time (${stats.checkboxStats.allTime.count} events)
+                            </h4>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => `
+                                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                                        <div class="text-xl font-semibold text-neon">${stats.checkboxStats.allTime.percentages[letter]}%</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
 
-    <!-- Records -->
-    <div>
-        <h4 class="text-lg font-semibold text-purple-600 mb-3">Records</h4>
-        <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
-            ${CHECKBOX_LETTERS.map(letter => {
-                const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                const monthlyCounts = Array(12).fill(0);
-                state.entries.forEach(entry => {
-                    if (entry.checkboxes?.[letter] === true) {
-                        const m = new Date(entry.date).getMonth();
-                        monthlyCounts[m]++;
-                    }
-                });
-                const max = Math.max(...monthlyCounts);
-                const bestMonth = max === 0 ? '—' : monthNames[monthlyCounts.indexOf(max)];
-                return `
-                    <div class="bg-dark rounded-lg p-3 text-center border border-neon">
-                        <div class="text-2xl font-bold text-purple-600">${letter}</div>
-                        <div class="text-xl font-semibold text-neon">${bestMonth}</div>
+                        <!-- Records -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-purple-600 mb-3">Records</h4>
+                            <div class="grid grid-cols-3 md:grid-cols-9 gap-3">
+                                ${CHECKBOX_LETTERS.map(letter => {
+                                    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                    const monthlyCounts = Array(12).fill(0);
+                                    state.events.forEach(event => {
+                                        if (event.checkboxes && event.checkboxes[letter] === true) {
+                                            const m = new Date(event.date).getMonth();
+                                            monthlyCounts[m]++;
+                                        }
+                                    });
+                                    const max = Math.max(...monthlyCounts);
+                                    const bestMonth = max === 0 ? '—' : monthNames[monthlyCounts.indexOf(max)];
+                                    return `
+                                        <div class="bg-dark rounded-lg p-3 text-center border border-neon">
+                                            <div class="text-2xl font-bold text-purple-600">${letter}</div>
+                                            <div class="text-xl font-semibold text-neon">${bestMonth}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
                     </div>
-                `;
-            }).join('')}
-        </div>
-    </div>
-
-</div>
 
                     <!-- Type Breakdown -->
                     <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
@@ -581,10 +497,7 @@
                                 <div class="flex items-center">
                                     <div class="w-32 text-sm font-semibold text-neon">${type}</div>
                                     <div class="flex-1 bg-neon rounded-full h-6 relative">
-                                        <div
-                                            class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
-                                            style="width: ${(count / stats.totalEvents) * 100}%"
-                                        >
+                                        <div class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold" style="width: ${(count / stats.totalEvents) * 100}%">
                                             ${count}
                                         </div>
                                     </div>
@@ -601,10 +514,7 @@
                                 <div class="flex items-center">
                                     <div class="w-32 text-sm font-semibold text-neon">${city}</div>
                                     <div class="flex-1 bg-neon rounded-full h-6 relative">
-                                        <div
-                                            class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
-                                            style="width: ${(count / stats.totalEvents) * 100}%"
-                                        >
+                                        <div class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold" style="width: ${(count / stats.totalEvents) * 100}%">
                                             ${count}
                                         </div>
                                     </div>
@@ -621,10 +531,7 @@
                                 <div class="flex items-center">
                                     <div class="w-40 text-sm font-semibold text-neon truncate">${place}</div>
                                     <div class="flex-1 bg-neon rounded-full h-6 relative ml-2">
-                                        <div
-                                            class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold"
-                                            style="width: ${(count / stats.totalEvents) * 100}%"
-                                        >
+                                        <div class="bg-purple-600 h-6 rounded-full flex items-center justify-end pr-2 text-white text-xs font-semibold" style="width: ${(count / stats.totalEvents) * 100}%">
                                             ${count}
                                         </div>
                                     </div>
@@ -633,7 +540,7 @@
                         </div>
                     </div>
 
-                    <!--Event List -->
+                    <!-- Event List -->
                     <div class="bg-dark rounded-lg border border-neon shadow-lg p-6">
                         <h3 class="text-xl font-bold text-neon mb-4">All Events</h3>
                         <div class="space-y-3 max-h-96 overflow-y-auto">
@@ -648,51 +555,26 @@
                                                 ${event.place ? ` • ${event.place}` : ''}
                                             </div>
                                         </div>
-                                        <button
-                                            onclick="deleteEvent('${event.id}')"
-                                            class="text-red-500 hover:text-red-700 p-1"
-                                        >
-                                            🗑️
-                                        </button>
+                                        <button onclick="deleteEvent('${event.id}')" class="text-red-500 hover:text-red-700 p-1">🗑️</button>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2 text-sm mb-2">
-                                        ${event.type 
-										  ? `<div>
-										  			<span class="text-neon">Type:</span> 
-													<span class="text-neon">${event.type}</span>
-											</div>` : ''}
-                                        ${event.ticketPrice
-                                            ? `<div>
-													<span class="text-neon">Ticket Price:</span> 
-													<span class="text-neon">$${event.ticketPrice.toFixed(2)}</span>
-												</div>`
-                                            : ''
-                                        }
-                                        <div class="col-span-2">
-   												    <span class="text-neon">After:</span> 
-													<span class="text-neon">${event.after ? 'Yes' : 'No'}</span>
-										</div>
-						</div>
+                                        ${event.type ? `<div><span class="text-neon">Type:</span> <span class="text-neon">${event.type}</span></div>` : ''}
+                                        ${event.ticketPrice ? `<div><span class="text-neon">Ticket Price:</span> <span class="text-neon">$${event.ticketPrice.toFixed(2)}</span></div>` : ''}
+                                        <div class="col-span-2"><span class="text-neon">After:</span> <span class="text-neon">${event.after ? 'Yes' : 'No'}</span></div>
+                                    </div>
                                     ${event.checkboxes ? `
                                         <div class="flex gap-2 flex-wrap mb-2">
-                                            ${CHECKBOX_LETTERS
-                                                .filter(l => event.checkboxes[l])
-                                                .map(l => `
-                                                    <span class="bg-dark text-neon border border-neon px-2 py-1 rounded text-xs font-semibold shadow-neon">
-                                                        ${l}
-                                                    </span>
-                                                `).join('')}
+                                            ${CHECKBOX_LETTERS.filter(l => event.checkboxes[l]).map(l => `
+                                                <span class="bg-dark text-neon border border-neon px-2 py-1 rounded text-xs font-semibold shadow-neon">${l}</span>
+                                            `).join('')}
                                         </div>
                                     ` : ''}
-									${event.photo ? `
+                                    ${event.photo ? `
                                         <div class="mb-2">
                                             <img src="${event.photo}" class="max-w-full h-32 rounded-lg border border-gray-300 cursor-pointer hover:opacity-90" onclick="viewFullPhoto('${event.photo}')">
                                         </div>
                                     ` : ''}
-                                    ${event.notes
-                                        ? `<div class="text-sm text-neon mt-2 italic">${event.notes}</div>`
-                                        : ''
-                                    }
+                                    ${event.notes ? `<div class="text-sm text-neon mt-2 italic">${event.notes}</div>` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -701,19 +583,16 @@
             `;
         }
 
-        // Event handlers
         function switchView(view) {
             state.view = view;
             render();
         }
 
-		// NEW: Export data as JSON file
         function exportData() {
             if (state.events.length === 0) {
                 alert('No events to export!');
                 return;
             }
-
             const dataStr = JSON.stringify(state.events, null, 2);
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
@@ -724,55 +603,38 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            
             alert(`Exported ${state.events.length} events successfully!`);
         }
 
-        // NEW: Trigger import file selection
         function importData() {
             document.getElementById('importFile').click();
         }
 
-        // NEW: Handle import file
         function handleImportFile(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const importedEvents = JSON.parse(e.target.result);
-                    
                     if (!Array.isArray(importedEvents)) {
                         alert('Invalid file format. Please select a valid backup file.');
                         return;
                     }
-
-                    // Ask user if they want to merge or replace
                     const action = confirm(
-                        `Found ${importedEvents.length} events in backup.\n\n` +
-                        `You currently have ${state.events.length} events.\n\n` +
-                        `Click OK to MERGE (keep both)\n` +
-                        `Click Cancel to REPLACE (delete current events)`
+                        `Found ${importedEvents.length} events in backup.\n\nYou currently have ${state.events.length} events.\n\nClick OK to MERGE (keep both)\nClick Cancel to REPLACE (delete current events)`
                     );
-
                     if (action) {
-                        // Merge: Add imported events
                         importedEvents.forEach(event => {
-                            // Give new IDs to avoid conflicts
                             event.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
                             storage.set(`event:${event.id}`, event);
                         });
                         loadEvents();
                         alert(`Successfully merged ${importedEvents.length} events!`);
                     } else {
-                        // Replace: Clear all and import
                         if (confirm('Are you sure? This will DELETE all current events!')) {
-                            // Clear all existing events
                             const keys = storage.list('event:');
                             keys.forEach(key => storage.delete(key));
-                            
-                            // Import new events
                             importedEvents.forEach(event => {
                                 storage.set(`event:${event.id}`, event);
                             });
@@ -780,7 +642,6 @@
                             alert(`Successfully imported ${importedEvents.length} events!`);
                         }
                     }
-                    
                     render();
                 } catch (error) {
                     alert('Error reading file. Please make sure it\'s a valid backup file.');
@@ -788,12 +649,9 @@
                 }
             };
             reader.readAsText(file);
-            
-            // Reset file input
             event.target.value = '';
         }
 
-		// Photo upload
         function handlePhotoUpload(event) {
             const file = event.target.files[0];
             if (file && file.type.startsWith('image/')) {
@@ -817,23 +675,16 @@
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4';
             modal.onclick = () => modal.remove();
-            modal.innerHTML = `
-                <div class="max-w-4xl max-h-full">
-                    <img src="${photoSrc}" class="max-w-full max-h-screen rounded-lg">
-                </div>
-            `;
+            modal.innerHTML = `<div class="max-w-4xl max-h-full"><img src="${photoSrc}" class="max-w-full max-h-screen rounded-lg"></div>`;
             document.body.appendChild(modal);
         }
 
-		
         function handleSave() {
-            // Get checkbox values 
             const checkboxes = {};
             CHECKBOX_LETTERS.forEach(letter => {
                 const checkbox = document.getElementById(`cb_${letter}`);
                 checkboxes[letter] = checkbox ? checkbox.checked : false;
             });
-
             state.formData = {
                 date: document.getElementById('date').value,
                 partyName: document.getElementById('partyName').value,
@@ -842,11 +693,10 @@
                 type: document.getElementById('type').value,
                 after: document.getElementById('after').checked,
                 ticketPrice: document.getElementById('ticketPrice').value,
-				photo: state.formData.photo,
+                photo: state.formData.photo,
                 notes: document.getElementById('notes').value,
                 checkboxes: checkboxes
             };
-
             saveEvent();
         }
 
@@ -854,12 +704,10 @@
         loadEvents();
         render();
 
-        // Install prompt for PWA
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            
             const installBtn = document.createElement('button');
             installBtn.className = 'fixed bottom-4 right-4 bg-neon text-dark px-4 py-2 rounded-lg shadow-neon hover:bg-neon/80 z-50';
             installBtn.innerHTML = '📱 Install App';
@@ -874,20 +722,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
